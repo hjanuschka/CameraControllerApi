@@ -85,6 +85,7 @@ namespace CameraControllerApi {
         bool set_iso(string iso, CCA_API_OUTPUT_TYPE type, string &output);
         bool set_whitebalance(string wb, CCA_API_OUTPUT_TYPE type, string &output);
         bool shot(CCA_API_OUTPUT_TYPE type, string &output);
+        bool preview(CCA_API_OUTPUT_TYPE type, string &output);
         bool autofocus(CCA_API_OUTPUT_TYPE type, string &output);
         bool bulb(CCA_API_OUTPUT_TYPE type, string &output);
         bool timelapse(int interval, time_t start, time_t end, CCA_API_OUTPUT_TYPE type, string &output);

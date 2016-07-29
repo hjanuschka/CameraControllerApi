@@ -31,6 +31,7 @@ Command::Command(Api *api){
     _valid_commands["/camera"] = set<string>(param_camera, param_camera + 2);
     _valid_commands["/settings"] = set<string>(param_settings, param_settings + 8);
     _valid_commands["/capture"] = set<string>(param_execute, param_execute + 5);
+    _valid_commands["/preview"] = set<string>(param_execute, param_execute + 5);
     _valid_commands["/fs"] = set<string>(param_files, param_files + 3);
 }
 
@@ -92,6 +93,8 @@ bool Command::_executeAPI(const string &url, string action, const map<string, st
         } else if(action.compare("key") == 0){
             ret = this->_api->get_settings_by_key(value, type, response);
         }
+    } else if(url == "/preview") {
+          ret = this->_api->preview(type, response); 
     } else if(url == "/capture"){
         if(action.compare("shot") == 0){
            ret = this->_api->shot(type, response); 

@@ -170,6 +170,27 @@ bool Api::shot(CCA_API_OUTPUT_TYPE type, string &output){
     return false;
 }
 
+bool Api::preview(CCA_API_OUTPUT_TYPE type, string &output){
+    if(this->_check(type, output)){
+        ptree tree;
+        string image;
+        const char *data;
+        
+        int ret = this->_cc->preview(&data);
+        if(ret){
+            tree.put("image", data);
+            Api::buildResponse(tree, type, CCA_API_RESPONSE_SUCCESS, output);
+
+        } else {
+            Api::buildResponse(tree, type, CCA_API_RESPONSE_INVALID, output);
+        }
+
+        return true;
+    }
+    return false;
+}
+
+
 bool Api::timelapse(int interval, time_t start, time_t end, CCA_API_OUTPUT_TYPE type, string &output){
     if(this->_check(type, output)){
         ptree tree;
