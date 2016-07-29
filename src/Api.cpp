@@ -7,6 +7,7 @@
 //
 
 #include "Api.h"
+#include "Helper.h"
 #include "Settings.h"
 #include <boost/lexical_cast.hpp>
 
@@ -178,7 +179,11 @@ bool Api::preview(CCA_API_OUTPUT_TYPE type, string &output){
         
         int ret = this->_cc->preview(&data);
         if(ret){
-            tree.put("image", data);
+            string b64;
+            std::string str(data);
+            string * dataa = &str;
+            Helper::to_base64(dataa, b64);
+            tree.put("image", b64);
             Api::buildResponse(tree, type, CCA_API_RESPONSE_SUCCESS, output);
 
         } else {
