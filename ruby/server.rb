@@ -1,116 +1,103 @@
 require 'gphoto2'
-require 'sinatra' 
-require 'json' 
+require 'sinatra'
+require 'json'
 require 'os'
-require "base64"
+require 'base64'
 
 class FXFCam
   attr_accessor :device
   def initialize
-    puts "FXF Cam init"
-    self.init_cam
-  end
-  def died
-    #init_cam
-  end
-  def init_cam
-    #while true  do
-        begin
-          if OS.mac? 
-            `killall -9 PTPCamera`
-          end
-          if self.device != nil
-            
-              self.device.close
-            end
-          self.device = GPhoto2::Camera.first
-          puts "Camera found #{self.device.inspect}"
-    #      break
-        rescue => error
-            puts "Camera cannot be initiated - retry'ing #{error.inspect}"
-            sleep 2
-            exit
-        end
-    #end
+    puts 'FXF Cam init'
+    init_cam
   end
 
-  
+  def died
+    # init_cam
+  end
+
+  def init_cam
+    # while true  do
+
+    `killall -9 PTPCamera` if OS.mac?
+    device.close unless device.nil?
+    self.device = GPhoto2::Camera.first
+    puts "Camera found #{device.inspect}"
+  #      break
+  rescue => error
+    puts "Camera cannot be initiated - retry'ing #{error.inspect}"
+    sleep 2
+    exit
+
+    # end
+  end
 end
 
-
-
-fxfcam = FXFCam.new;
-
+fxfcam = FXFCam.new
 
 get '/liveview' do
-    return ""
-    boundary      = 'some_shit'
-    
+  return ''
+  boundary = 'some_shit'
 
-    headers \
-      "Cache-Control" => "no-cache, private",
-      "Pragma"        => "no-cache",
-      "Content-type"  => "multipart/x-mixed-replace; boundary=#{boundary}"
+  headers \
+    'Cache-Control' => 'no-cache, private',
+    'Pragma'        => 'no-cache',
+    'Content-type'  => "multipart/x-mixed-replace; boundary=#{boundary}"
 
-    stream(:keep_open) do |out|
-      while true
-        
-        content     = fxfcam.device.preview.data
-        puts    content.inspect
-        out << "Content-type: image/jpeg\n\n"
-        out << content
-        out << "\n\n--#{boundary}\n\n"
+  stream(:keep_open) do |out|
+    loop do
+      content = fxfcam.device.preview.data
+      puts content.inspect
+      out << "Content-type: image/jpeg\n\n"
+      out << content
+      out << "\n\n--#{boundary}\n\n"
 
-        sleep 1
-      end
+      sleep 1
     end
+  end
 end
 
-set :port, 8888 
+set :port, 8888
 
-#REST INTERFACE
+# REST INTERFACE
 get '/capture' do
-  headers 'Access-Control-Allow-Origin' => "*"
+  headers 'Access-Control-Allow-Origin' => '*'
   content_type :json
-  return_message = {} 
+  return_message = {}
   begin
-    headers('Content-Type' => "application/json")
+    headers('Content-Type' => 'application/json')
     pic = fxfcam.device.capture
-    
-    return_message[:status] = "success"
-    return_message[:cca_response] = {:data => {:image => Base64.encode64(pic.data)}}
+
+    return_message[:status] = 'success'
+    return_message[:cca_response] = { data: { image: Base64.encode64(pic.data) } }
     return_message.to_json
   rescue => error
     fxfcam.died
-    headers("Content-Type" => "application/json")
-    return_message[:status] = "failed"
+    headers('Content-Type' => 'application/json')
+    return_message[:status] = 'failed'
     return_message[:error] = true
     return_message[:code] = error.code
     return_message[:raw_msg] = error.message
     return_message.to_json
   end
 end
-get '/preview' do 
+get '/preview' do
   return_message = {}
   begin
-    headers('Content-Type' => "image/jpeg")
+    headers('Content-Type' => 'image/jpeg')
     fxfcam.device.preview.data
   rescue => error
     fxfcam.died
-    headers("Content-Type" => "application/json")
-    return_message[:status] = "failed"
+    headers('Content-Type' => 'application/json')
+    return_message[:status] = 'failed'
     return_message[:error] = true
     return_message[:code] = error.code
     return_message[:raw_msg] = error.message
-    #error -7 I/O error
-    #error -53 Could not claim USB
-    if error.code == -7 || error.code == -53 
-      puts "HARD ERROR"
+    # error -7 I/O error
+    # error -53 Could not claim USB
+    if error.code == -7 || error.code == -53
+      puts 'HARD ERROR'
       Process.kill('KILL', Process.pid)
     end
     return_message.to_json
   end
 end
-  
-  
-
